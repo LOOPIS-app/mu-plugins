@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Skip on live environment (env vars are set at server level)
-if (defined('WP_LIVE') && WP_LIVE) {
+if (defined('LOOPIS_LIVE') && LOOPIS_LIVE) {
     return;
 }
 

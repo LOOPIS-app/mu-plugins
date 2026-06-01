@@ -19,7 +19,6 @@ add_filter( 'wpum_get_registered_profile_tabs', 'my_wpum_get_registered_profile_
 function my_wpum_get_registered_profile_tabs( $tabs ) {
 	$tabs['coins']['name'] = esc_html( '👛' );
 	$tabs['economy']['name'] = esc_html( '🧮' );
-	$tabs['posts']['name'] = esc_html( '🎁' );
 	$tabs['about']['name'] = esc_html( '⚙' );
 	return $tabs; }
 
@@ -28,8 +27,13 @@ add_filter( 'wpum_get_registered_profile_tabs', 'my_wpum_rearrange_profile_tabs'
 function my_wpum_rearrange_profile_tabs( $tabs ) {
 	$tabs['coins'] ['priority'] = 1;
 	$tabs['economy'] ['priority'] = 2;
-	$tabs['posts'] ['priority'] = 3;
-	$tabs['about'] ['priority'] = 4;
+	$tabs['about'] ['priority'] = 3;
+	return $tabs; }
+
+// Remove profile tabs we do not use
+add_filter( 'wpum_get_registered_profile_tabs', 'my_wpum_remove_profile_tabs', 999 );
+function my_wpum_remove_profile_tabs( $tabs ) {
+	unset( $tabs['posts'] );
 	return $tabs; }
 	
 // Rename setting tabs
