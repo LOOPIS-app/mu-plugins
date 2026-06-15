@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name: LOOPIS Env Loader
- * Description: Configuration of environment variables not used in production
+ * Plugin Name: LOOPIS Environment
+ * Description: Loading of environment variables from .env file, for development purposes.
  * Version:     0.02
  * Author:      The Develoopers
  * Author URI:  https://loopis.org
