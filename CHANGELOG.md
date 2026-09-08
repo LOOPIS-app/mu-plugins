@@ -1,5 +1,8 @@
 # 📋 Changelog for "LOOPIS mu-plugins"
 
+## 0.04 (2026-09-08)
+- Added constants definitions for plugin "LOOPIS Users"
+
 ## 0.03 (2026-06-15)
 - Added constants definitions plugin (moved from "LOOPIS Theme" and "LOOPIS Theme HQ")
 - Removed `wpum-tab-fix.php` and `wpum-cat-fix.php` (deprecated)
