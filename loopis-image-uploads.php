@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Set compression quality for supported image formats and generated thumbnails.
+// Set compression quality for supported images and generated thumbnails.
 function loopis_media_image_quality($quality, $mime_type) {
     return in_array($mime_type, array('image/jpeg', 'image/png', 'image/webp'), true) ? 70 : $quality;
 }
@@ -21,7 +21,7 @@ add_filter('wp_editor_set_quality', 'loopis_media_image_quality', 10, 2);
 
 // Prevent WordPress from generating additional intermediate image sizes.
 function loopis_media_upload_sizes($sizes) {
-    // Keep only the configured thumbnail; the uploaded full-size file is already capped.
+    // Keep only the thumbnail; the full-size file is capped to the configured large dimensions.
     return isset($sizes['thumbnail']) ? array('thumbnail' => $sizes['thumbnail']) : array();
 }
 add_filter('intermediate_image_sizes_advanced', 'loopis_media_upload_sizes', 999);
@@ -44,13 +44,13 @@ function loopis_process_media_upload($upload) {
     };
 
     $output_types = array(
-        'image/jpeg'          => 'image/jpeg',
-        'image/png'           => 'image/png',
+        'image/jpeg'          => 'image/webp',
+        'image/png'           => 'image/webp',
         'image/webp'          => 'image/webp',
-        'image/heic'          => 'image/jpeg',
-        'image/heif'          => 'image/jpeg',
-        'image/heic-sequence' => 'image/jpeg',
-        'image/heif-sequence' => 'image/jpeg',
+        'image/heic'          => 'image/webp',
+        'image/heif'          => 'image/webp',
+        'image/heic-sequence' => 'image/webp',
+        'image/heif-sequence' => 'image/webp',
     );
     $source_type = $upload['type'];
 
@@ -66,14 +66,20 @@ function loopis_process_media_upload($upload) {
         return $fail('Image processing failed: ' . $editor->get_error_message());
     }
 
+    if (!call_user_func(array(get_class($editor), 'supports_mime_type'), $output_type)) {
+        return $fail('Image processing failed: the server cannot encode WebP images.');
+    }
+
     $result = $editor->maybe_exif_rotate();
     if (is_wp_error($result)) {
         return $fail('Image rotation failed: ' . $result->get_error_message());
     }
 
     $dimensions = $editor->get_size();
-    if ($dimensions['width'] > 1280 || $dimensions['height'] > 1280) {
-        $result = $editor->resize(1280, 1280, false);
+    $max_width = absint(get_option('large_size_w'));
+    $max_height = absint(get_option('large_size_h'));
+    if (($max_width && $dimensions['width'] > $max_width) || ($max_height && $dimensions['height'] > $max_height)) {
+        $result = $editor->resize($max_width, $max_height, false);
         if (is_wp_error($result)) {
             return $fail('Image resizing failed: ' . $result->get_error_message());
         }
@@ -87,8 +93,7 @@ function loopis_process_media_upload($upload) {
     $destination = $source_file;
 
     if ($source_type !== $output_type) {
-        // Avoid overwriting a file if a JPEG with this name already exists.
-        $filename = pathinfo($source_file, PATHINFO_FILENAME) . '.jpg';
+        $filename = pathinfo($source_file, PATHINFO_FILENAME) . '.webp';
         $destination = trailingslashit(dirname($source_file)) . wp_unique_filename(dirname($source_file), $filename);
     }
 
@@ -102,7 +107,7 @@ function loopis_process_media_upload($upload) {
         if (!wp_delete_file($saved['path'])) {
             error_log('LOOPIS Image Uploads: could not remove the converted image after cleanup failed.');
         }
-        error_log('LOOPIS Image Uploads: could not remove the source image after HEIC/HEIF conversion.');
+        error_log('LOOPIS Image Uploads: could not remove the source image after format conversion.');
         return array('error' => 'Could not clean up the source image after conversion.');
     }
 
