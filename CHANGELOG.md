@@ -1,7 +1,7 @@
 # 📋 Changelog for "LOOPIS mu-plugins"
 
-## Unreleased
-- Replacing "EWWW Image Optimizer" with `loopis-image-uploads.php`
+## 0.05 (2026-11-10)
+- Replacing plugin "EWWW Image Optimizer" with `loopis-image-uploads.php`
 
 ## 0.04 (2026-09-08)
 - Added constants definitions for plugin "LOOPIS Users"

@@ -13,16 +13,20 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Set compression quality for supported image formats and generated thumbnails.
 function loopis_media_image_quality($quality, $mime_type) {
-    return in_array($mime_type, array('image/jpeg', 'image/png', 'image/webp'), true) ? 82 : $quality;
+    return in_array($mime_type, array('image/jpeg', 'image/png', 'image/webp'), true) ? 70 : $quality;
 }
 add_filter('wp_editor_set_quality', 'loopis_media_image_quality', 10, 2);
 
+// Prevent WordPress from generating additional intermediate image sizes.
 function loopis_media_upload_sizes($sizes) {
+    // Keep only the configured thumbnail; the uploaded full-size file is already capped.
     return isset($sizes['thumbnail']) ? array('thumbnail' => $sizes['thumbnail']) : array();
 }
 add_filter('intermediate_image_sizes_advanced', 'loopis_media_upload_sizes', 999);
 
+// Resize and re-encode supported images before WordPress creates their attachments.
 function loopis_process_media_upload($upload) {
     if (empty($upload['file']) || empty($upload['type'])) {
         return $upload;
@@ -50,6 +54,7 @@ function loopis_process_media_upload($upload) {
     );
     $source_type = $upload['type'];
 
+    // Leave formats outside this policy to WordPress and other upload handlers.
     if (!isset($output_types[$source_type])) {
         return $upload;
     }
@@ -67,14 +72,14 @@ function loopis_process_media_upload($upload) {
     }
 
     $dimensions = $editor->get_size();
-    if ($dimensions['width'] > 1920 || $dimensions['height'] > 1920) {
-        $result = $editor->resize(1920, 1920, false);
+    if ($dimensions['width'] > 1280 || $dimensions['height'] > 1280) {
+        $result = $editor->resize(1280, 1280, false);
         if (is_wp_error($result)) {
             return $fail('Image resizing failed: ' . $result->get_error_message());
         }
     }
 
-    $result = $editor->set_quality(82);
+    $result = $editor->set_quality(70);
     if (is_wp_error($result)) {
         return $fail('Image compression failed: ' . $result->get_error_message());
     }
@@ -82,6 +87,7 @@ function loopis_process_media_upload($upload) {
     $destination = $source_file;
 
     if ($source_type !== $output_type) {
+        // Avoid overwriting a file if a JPEG with this name already exists.
         $filename = pathinfo($source_file, PATHINFO_FILENAME) . '.jpg';
         $destination = trailingslashit(dirname($source_file)) . wp_unique_filename(dirname($source_file), $filename);
     }
@@ -92,6 +98,7 @@ function loopis_process_media_upload($upload) {
     }
 
     if ($source_file !== $saved['path'] && !wp_delete_file($source_file)) {
+        // Don't leave both source and converted files when cleanup fails.
         if (!wp_delete_file($saved['path'])) {
             error_log('LOOPIS Image Uploads: could not remove the converted image after cleanup failed.');
         }
