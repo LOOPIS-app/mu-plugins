@@ -1,9 +1,5 @@
 # 📋 Changelog for "LOOPIS mu-plugins"
 
-## 0.05 (2026-11-10)
-- Replacing plugin "EWWW Image Optimizer" with `loopis-image-uploads.php`
-- Shifting image upload format from JPEG to WebP
-
 ## 0.04 (2026-09-08)
 - Added constants definitions for plugin "LOOPIS Users"
 
